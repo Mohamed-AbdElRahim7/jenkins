@@ -1,2 +1,2 @@
-print "HEllo from my repo abdelrahim"
-print "NTI DevSecOps"
+print ("HEllo from my repo abdelrahim")
+print ("NTI DevSecOps")
