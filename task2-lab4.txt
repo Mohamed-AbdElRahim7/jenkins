@@ -7,3 +7,32 @@ curl -X POST 'http://localhost:8080/job/lab2-task3/buildWithParameters' \
   -H "$CRUMB" \
   --data ENV=dev
 
+---------------------------------------------------------
+
+pipeline {
+    agent any
+
+    triggers {
+        githubPush()
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Mohamed-AbdElRahim7/jenkins.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building the project...'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+            }
+        }
+    }
+}
