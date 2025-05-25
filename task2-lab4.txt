@@ -1,0 +1,9 @@
+CRUMB=$(curl -s -u admin:11c0367e189cb6add4c237fdeb6df70aa0 \
+  'http://localhost:8080/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)')
+
+
+curl -X POST 'http://localhost:8080/job/lab2-task3/buildWithParameters' \
+  -u admin:11c0367e189cb6add4c237fdeb6df70aa0 \
+  -H "$CRUMB" \
+  --data ENV=dev
+
