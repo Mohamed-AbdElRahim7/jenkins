@@ -1,25 +1,35 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.10'
+        }
+    }
 
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Run Script') {
             steps {
                 echo '🚀 Running Python script...'
-                sh 'python3 lab2-task1.py'
+                sh 'python lab2-task1.py'
             }
         }
 
         stage('Test') {
             steps {
-                echo '✅ Running dummy tests...'
-                sh 'echo "All tests passed!"'
+                echo '🧪 Running dummy tests...'
+                sh 'echo "✅ All tests passed!"'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo '📦 Deploying the application...'
-                sh 'echo "App deployed (simulated)!"'
+                echo '📦 Deploying...'
+                sh 'echo "🚀 Deployed!"'
             }
         }
     }
