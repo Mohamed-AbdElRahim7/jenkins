@@ -1,0 +1,5 @@
+- hosts: all
+  remote_user: ec2-user
+  tasks:
+    - name: Run simple custom script
+      script: ./scripts/custom_script.sh
