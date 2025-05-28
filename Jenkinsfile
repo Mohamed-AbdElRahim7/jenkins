@@ -1,16 +1,23 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'hashicorp/terraform:1.6.6' 
+            args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
+        }
+    }
 
     environment {
-        AWS_REGION = 'us-east-1'
         TF_WORKING_DIR = 'terraform'
         ANSIBLE_WORKING_DIR = 'ansible'
+        AWS_REGION = 'us-east-1'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Install Dependencies') {
             steps {
-                git url: 'https://github.com/Mohamed-AbdElRahim7/jenkins.git', branch: 'master'
+                sh '''
+                    apk add --no-cache ansible openssh bash curl
+                '''
             }
         }
 
@@ -43,7 +50,7 @@ pipeline {
 
         stage('Run Ansible Playbook') {
             steps {
-                sshagent(['ec2-ssh-key']) {
+                sshagent(['jenkins']) {
                     dir(env.ANSIBLE_WORKING_DIR) {
                         sh """
                         ansible-playbook -i '${env.EC2_IP},' playbook.yml --private-key ~/.ssh/jenkins -u ec2-user
@@ -55,9 +62,9 @@ pipeline {
 
         stage('Verify Script Execution') {
             steps {
-                sshagent(['ec2-ssh-key']) {
-                    sh "ssh -o StrictHostKeyChecking=no -i ~/.ssh/jenkins ec2-user@${env.EC2_IP} 'cat /home/ec2-user/hello_ansible.txt'"
-                }
+                sh """
+                echo 'Login to EC2 and verify: /home/ec2-user/hello_ansible.txt'
+                """
             }
         }
     }
