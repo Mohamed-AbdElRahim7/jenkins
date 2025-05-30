@@ -40,8 +40,8 @@ pipeline {
                 script {
                     echo "Installing Terraform and Ansible..."
                     // --- MODIFICATION HERE ---
-                    // Added python3-launchpadlib to resolve the 'AttributeError: 'NoneType' object has no attribute 'people''
-                    sh 'sudo apt-get update && sudo apt-get install -y software-properties-common python3-apt dirmngr python3-launchpadlib'
+                    // Added 'wget' to the installation list.
+                    sh 'sudo apt-get update && sudo apt-get install -y software-properties-common python3-apt dirmngr python3-launchpadlib wget'
                     // --- END MODIFICATION ---
                     sh 'sudo apt-add-repository --yes --update ppa:ansible/ansible'
                     sh 'sudo wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg'
