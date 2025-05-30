@@ -42,11 +42,11 @@ pipeline {
                     // Install core dependencies including wget and gnupg
                     sh 'sudo apt-get update && sudo apt-get install -y software-properties-common python3-apt dirmngr python3-launchpadlib wget gnupg'
 
-                    // --- MODIFICATION HERE ---
+                    // --- CRITICAL MODIFICATION: REMOVED PPA AND INSTALLING DIRECTLY ---
                     // Removed apt-add-repository for Ansible PPA as it's not available for Debian bookworm.
                     // Instead, install Ansible directly from Debian repositories.
                     sh 'sudo apt-get install -y ansible' // Install Ansible
-                    // --- END MODIFICATION ---
+                    // --- END CRITICAL MODIFICATION ---
 
                     // Download HashiCorp GPG key to a temporary file, then dearmor it,
                     // and move it to the keyrings directory. This avoids the tty error.
