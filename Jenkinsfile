@@ -39,14 +39,29 @@ pipeline {
             steps {
                 script {
                     echo "Installing Terraform and Ansible..."
-                    // --- MODIFICATION HERE ---
-                    // Added 'wget' to the installation list.
-                    sh 'sudo apt-get update && sudo apt-get install -y software-properties-common python3-apt dirmngr python3-launchpadlib wget'
-                    // --- END MODIFICATION ---
+                    // Install core dependencies including wget and gnupg
+                    sh 'sudo apt-get update && sudo apt-get install -y software-properties-common python3-apt dirmngr python3-launchpadlib wget gnupg'
+
+                    // Add Ansible PPA
                     sh 'sudo apt-add-repository --yes --update ppa:ansible/ansible'
-                    sh 'sudo wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg'
+
+                    // --- MODIFICATION HERE ---
+                    // Download HashiCorp GPG key to a temporary file, then dearmor it,
+                    // and move it to the keyrings directory. This avoids the tty error.
+                    sh '''
+                        sudo wget -O /tmp/hashicorp-gpg-key.gpg https://apt.releases.hashicorp.com/gpg
+                        sudo gpg --dearmor /tmp/hashicorp-gpg-key.gpg > /usr/share/keyrings/hashicorp-archive-keyring.gpg
+                        sudo rm /tmp/hashicorp-gpg-key.gpg
+                    '''
+                    // --- END MODIFICATION ---
+
+                    // Add HashiCorp repository
                     sh 'echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list'
+
+                    // Update apt and install Terraform
                     sh 'sudo apt update && sudo apt install -y terraform'
+
+                    // Verify installations
                     sh 'terraform version'
                     sh 'ansible --version'
                 }
