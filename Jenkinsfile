@@ -97,8 +97,9 @@ pipeline {
                                 ${env.EC2_PUBLIC_IP} ansible_user=ubuntu ansible_ssh_private_key_file=${SSH_KEY_FILE} ansible_python_interpreter=/usr/bin/python3
                             """
 
-                            // Run the Ansible playbook using the dynamically created inventory.
-                            sh "ansible-playbook -i inventory.ini playbook.yml"
+                            // Added -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null to bypass SSH host key verification.
+                            // WARNING: In production, consider more secure ways to manage host keys (e.g., pre-populating known_hosts).
+                            sh "ansible-playbook -i inventory.ini playbook.yml -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
                         }
                     }
                 }
@@ -106,7 +107,7 @@ pipeline {
         }
     }
 
-    // The 'post' section defines actions that run after the main pipeline stages complete.
+    // The 'post' section has been re-added as per your request.
     post {
         always {
             script {
