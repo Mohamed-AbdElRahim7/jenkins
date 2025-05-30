@@ -7,7 +7,7 @@ pipeline {
   }
 
   environment {
-    HOME = "${env.WORKSPACE}" // ✅ So Docker writes config to a writable location
+    HOME = "${env.WORKSPACE}"
     IMAGE_NAME = "mohamedelgarhy/jenkins"
     TAG = "${BUILD_NUMBER}"
   }
@@ -26,7 +26,7 @@ pipeline {
       steps {
         withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           sh '''
-            docker --config $HOME/.docker login -u $DOCKER_USER -p $DOCKER_PASS
+            echo $DOCKER_PASS | docker --config $HOME/.docker login -u $DOCKER_USER --password-stdin
           '''
         }
       }
