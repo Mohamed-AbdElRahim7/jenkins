@@ -1,35 +1,49 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'docker:24.0.2-cli'
+      args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
+    }
+  }
 
   environment {
-    IMAGE_NAME = 'mohamedelgarhy/jenkins'
-    IMAGE_TAG = "${BUILD_NUMBER}"
+    HOME = "${env.WORKSPACE}" // ✅ So Docker writes config to a writable location
+    IMAGE_NAME = "mohamedelgarhy/jenkins"
+    TAG = "${BUILD_NUMBER}"
   }
 
   stages {
-    stage('Clone Repo') {
-      steps {
-        git url: 'https://github.com/Mohamed-AbdElRahim7/jenkins.git', branch: 'master'
-      }
-    }
-
     stage('Build Docker Image') {
       steps {
-        script {
-          sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
-        }
+        sh '''
+          mkdir -p $HOME/.docker
+          docker --config $HOME/.docker build -t $IMAGE_NAME:$TAG .
+        '''
       }
     }
 
-    stage('Push to Docker Hub') {
+    stage('Login to DockerHub') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           sh '''
-            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-            docker push $IMAGE_NAME:$IMAGE_TAG
+            docker --config $HOME/.docker login -u $DOCKER_USER -p $DOCKER_PASS
           '''
         }
       }
+    }
+
+    stage('Push Docker Image') {
+      steps {
+        sh '''
+          docker --config $HOME/.docker push $IMAGE_NAME:$TAG
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      echo 'Build and push completed (or failed).'
     }
   }
 }
