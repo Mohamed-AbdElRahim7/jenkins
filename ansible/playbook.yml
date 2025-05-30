@@ -1,5 +1,28 @@
-- hosts: all
-  remote_user: ec2-user
+---
+- name: Run a simple script on EC2 instance
+  hosts: all
+  become: yes
+  gather_facts: no
+
   tasks:
-    - name: Run simple custom script
-      script: ./scripts/custom_script.sh
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Nginx (example script)
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Start Nginx service
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Display a message
+      ansible.builtin.debug:
+        msg: "Hello from Ansible! Nginx is installed and running on {{ inventory_hostname }}."
