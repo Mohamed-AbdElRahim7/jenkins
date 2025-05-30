@@ -1,19 +1,14 @@
 // Jenkinsfile
 pipeline {
-    // Corrected agent directive: Directly specify the agent type.
-    agent any // This means the pipeline can run on any available Jenkins agent.
-              // If you want to use your custom Docker image, you would use:
-              // agent {
-              //     docker {
-              //         image 'jenkins-terraform-ansible-agent:latest'
-              //     }
-              // }
+    // Defines the Jenkins agent to run the pipeline.
+    agent any
 
     // Define environment variables used throughout the pipeline.
     environment {
         AWS_REGION = 'us-east-1'
-        AWS_CREDENTIALS_ID = 'aws-credentials' // Ensure this credential ID exists in Jenkins
-        SSH_KEY_CREDENTIAL_ID = 'jenkins-private-key' // Ensure this credential ID exists in Jenkins
+        AWS_CREDENTIALS_ID = 'aws-credentials'
+        SSH_KEY_CREDENTIAL_ID = 'jenkins-private-key'
+        // Define paths to Terraform and Ansible directories relative to the workspace root
         TERRAFORM_DIR = 'terraform'
         ANSIBLE_DIR = 'ansible'
     }
@@ -21,38 +16,36 @@ pipeline {
     // Define the stages of the pipeline.
     stages {
         // Stage to checkout source code.
+        // This is crucial now as Terraform and Ansible files are external.
         stage('Checkout SCM') {
             steps {
                 script {
                     echo "Checking out SCM..."
-                    // This step automatically checks out your Git repository
-                    // as configured in the Jenkins job's SCM settings.
-                    // No explicit 'git' command is needed here.
+                    // IMPORTANT: Configure your SCM (e.g., Git) here.
+                    // Example for a Git repository:
+                    // git branch: 'main', credentialsId: 'your-git-credential-id', url: 'https://github.com/your-org/your-repo.git'
+                    // For this example, we'll assume the files are already in the workspace
+                    // or you've configured the SCM in your Jenkins job settings.
                 }
             }
         }
 
         // Stage to install necessary dependencies (Terraform and Ansible) on the Jenkins agent.
-        // This stage now expects 'sudo' to be configured for the 'jenkins' user or
-        // that the agent can run apt-get commands directly.
         stage('Install Dependencies') {
             steps {
                 script {
                     echo "Installing Terraform and Ansible..."
-                    // Install core dependencies including wget and gnupg
+                    // Install core dependencies including wget, gnupg, and Python packages for apt-add-repository
                     sh 'sudo apt-get update && sudo apt-get install -y software-properties-common python3-apt dirmngr python3-launchpadlib wget gnupg'
 
-                    // --- CRITICAL MODIFICATION: REMOVED PPA AND INSTALLING DIRECTLY ---
-                    // Removed apt-add-repository for Ansible PPA as it's not available for Debian bookworm.
-                    // Instead, install Ansible directly from Debian repositories.
-                    sh 'sudo apt-get install -y ansible' // Install Ansible
-                    // --- END CRITICAL MODIFICATION ---
+                    // Install Ansible directly from Debian repositories (removed PPA due to bookworm incompatibility)
+                    sh 'sudo apt-get install -y ansible'
 
-                    // Download HashiCorp GPG key to a temporary file, then dearmor it,
-                    // and move it to the keyrings directory. This avoids the tty error.
+                    // Download HashiCorp GPG key to a temporary file, dearmor it,
+                    // and move it to the keyrings directory using sudo tee for proper permissions.
                     sh '''
                         sudo wget -O /tmp/hashicorp-gpg-key.gpg https://apt.releases.hashicorp.com/gpg
-                        sudo gpg --dearmor /tmp/hashicorp-gpg-key.gpg > /usr/share/keyrings/hashicorp-archive-keyring.gpg
+                        sudo gpg --dearmor /tmp/hashicorp-gpg-key.gpg | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null
                         sudo rm /tmp/hashicorp-gpg-key.gpg
                     '''
 
@@ -76,7 +69,6 @@ pipeline {
                     echo "Creating EC2 instance with Terraform..."
                     // Change directory to where main.tf is located.
                     dir("${TERRAFORM_DIR}") {
-                        // 'withAWS' requires the "Pipeline: AWS Steps" plugin to be installed in Jenkins.
                         withAWS(credentials: "${AWS_CREDENTIALS_ID}", region: "${AWS_REGION}") {
                             sh 'terraform init'
                             sh 'terraform apply -auto-approve'
@@ -105,6 +97,7 @@ pipeline {
                                 ${env.EC2_PUBLIC_IP} ansible_user=ubuntu ansible_ssh_private_key_file=${SSH_KEY_FILE} ansible_python_interpreter=/usr/bin/python3
                             """
 
+                            // Run the Ansible playbook using the dynamically created inventory.
                             sh "ansible-playbook -i inventory.ini playbook.yml"
                         }
                     }
@@ -121,7 +114,7 @@ pipeline {
                 // Ensure we are in the Terraform directory for destroy.
                 dir("${TERRAFORM_DIR}") {
                     withAWS(credentials: "${AWS_CREDENTIALS_ID}", region: "${AWS_REGION}") {
-                        sh 'terraform destroy -auto-approve || true' // '|| true' ensures cleanup even if destroy fails
+                        sh 'terraform destroy -auto-approve || true'
                     }
                 }
                 echo "Cleanup complete."
