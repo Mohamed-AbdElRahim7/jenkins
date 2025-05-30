@@ -97,9 +97,9 @@ pipeline {
                                 ${env.EC2_PUBLIC_IP} ansible_user=ubuntu ansible_ssh_private_key_file=${SSH_KEY_FILE} ansible_python_interpreter=/usr/bin/python3
                             """
 
-                            // Added -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null to bypass SSH host key verification.
+                            // Use --ssh-extra-args to pass SSH options correctly to ansible-playbook.
                             // WARNING: In production, consider more secure ways to manage host keys (e.g., pre-populating known_hosts).
-                            sh "ansible-playbook -i inventory.ini playbook.yml -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+                            sh 'ansible-playbook -i inventory.ini playbook.yml --ssh-extra-args "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"'
                         }
                     }
                 }
