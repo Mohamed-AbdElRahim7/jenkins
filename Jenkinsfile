@@ -34,12 +34,12 @@ pipeline {
             steps {
                 script {
                     echo "Installing Terraform and Ansible..."
-                    sh 'sudo apt-get update && sudo apt-get install -y software-properties-common'
-                    sh 'sudo apt-add-repository --yes --update ppa:ansible/ansible'
-                    sh 'sudo apt-get install -y ansible'
-                    sh 'wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg'
-                    sh 'echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list'
-                    sh 'sudo apt update && sudo apt install -y terraform'
+                    sh 'apt-get update && apt-get install -y software-properties-common'
+                    sh 'apt-add-repository --yes --update ppa:ansible/ansible'
+                    sh 'apt-get install -y ansible'
+                    sh 'wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg'
+                    sh 'echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list'
+                    sh 'apt update && apt install -y terraform'
                     sh 'terraform version'
                     sh 'ansible --version'
                 }
