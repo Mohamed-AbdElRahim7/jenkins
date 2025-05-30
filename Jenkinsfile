@@ -7,7 +7,7 @@ pipeline {
   }
 
   environment {
-    HOME = "${env.WORKSPACE}"
+    HOME = "${env.WORKSPACE}"  // لتخزين إعدادات Docker config في workspace
     IMAGE_NAME = "mohamedelgarhy/jenkins"
     TAG = "${BUILD_NUMBER}"
   }
@@ -15,6 +15,7 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
+        // تنزيل الكود من الـ Git repo
         checkout scm
       }
     }
@@ -28,6 +29,28 @@ pipeline {
       }
     }
 
-    // مراحل أخرى ...
+    stage('Login to DockerHub') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh '''
+            echo $DOCKER_PASS | docker --config $HOME/.docker login -u $DOCKER_USER --password-stdin
+          '''
+        }
+      }
+    }
+
+    stage('Push Docker Image') {
+      steps {
+        sh '''
+          docker --config $HOME/.docker push $IMAGE_NAME:$TAG
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      echo 'Build and push completed (or failed).'
+    }
   }
 }
