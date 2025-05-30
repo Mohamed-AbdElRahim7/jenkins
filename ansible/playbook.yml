@@ -1,27 +1,27 @@
 ---
 - name: Run a simple script on EC2 instance
   hosts: all
-  become: yes
-  gather_facts: no
+  become: yes # Run tasks with sudo privileges
+  gather_facts: no # Keep gather_facts: no for speed, as we don't need OS family facts now
 
   tasks:
     - name: Update apt cache
       ansible.builtin.apt:
         update_cache: yes
-      when: ansible_os_family == "Debian"
+      # Removed 'when: ansible_os_family == "Debian"'
 
     - name: Install Nginx (example script)
       ansible.builtin.apt:
         name: nginx
         state: present
-      when: ansible_os_family == "Debian"
+      # Removed 'when: ansible_os_family == "Debian"'
 
     - name: Start Nginx service
       ansible.builtin.service:
         name: nginx
         state: started
         enabled: yes
-      when: ansible_os_family == "Debian"
+      # Removed 'when: ansible_os_family == "Debian"'
 
     - name: Display a message
       ansible.builtin.debug:
