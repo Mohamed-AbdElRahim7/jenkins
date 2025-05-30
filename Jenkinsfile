@@ -1,14 +1,13 @@
 // Jenkinsfile
 pipeline {
-    // Defines the Jenkins agent to run the pipeline.
-    agent {
-        // We're assuming the 'jenkins-terraform-ansible-agent:latest' image
-        // is what you're intending to use, or that your 'any' agent
-        // now has sudo/root permissions configured.
-        // If you're still using 'agent any' without a custom image,
-        // it means you've directly configured the running Jenkins container.
-        agent any
-    }
+    // Corrected agent directive: Directly specify the agent type.
+    agent any // This means the pipeline can run on any available Jenkins agent.
+              // If you want to use your custom Docker image, change this to:
+              // agent {
+              //     docker {
+              //         image 'jenkins-terraform-ansible-agent:latest'
+              //     }
+              // }
 
     // Define environment variables used throughout the pipeline.
     environment {
@@ -40,7 +39,7 @@ pipeline {
             steps {
                 script {
                     echo "Installing Terraform and Ansible..."
-                    // These commands rely on the permissions you've just configured.
+                    // These commands rely on the permissions you've configured.
                     sh 'sudo apt-get update && sudo apt-get install -y software-properties-common'
                     sh 'sudo apt-add-repository --yes --update ppa:ansible/ansible'
                     sh 'sudo apt-get install -y ansible'
@@ -80,7 +79,7 @@ pipeline {
                     echo "Running Ansible playbook on EC2 instance..."
                     // Change directory to where playbook.yml is located.
                     dir("${ANSIBLE_DIR}") {
-                        withCredentials([file(credentials: "${SSH_KEY_CREDENTIAL_ID}", variable: 'SSH_KEY_FILE')]) {
+                        withCredentials([file(credentialsId: "${SSH_KEY_CREDENTIAL_ID}", variable: 'SSH_KEY_FILE')]) {
                             sh "chmod 400 ${SSH_KEY_FILE}"
 
                             // Create the Ansible inventory file dynamically in the Ansible directory.
