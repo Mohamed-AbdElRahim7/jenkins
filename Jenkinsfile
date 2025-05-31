@@ -1,13 +1,8 @@
 pipeline {
-  agent {
-    docker {
-      image 'docker:24.0.2-cli'
-      args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
-    }
-  }
+  agent any
 
   environment {
-    HOME = "${env.WORKSPACE}"  // لتخزين إعدادات Docker config في workspace
+    HOME = "${env.WORKSPACE}"
     IMAGE_NAME = "mohamedelgarhy/jenkins"
     TAG = "${BUILD_NUMBER}"
   }
@@ -15,7 +10,6 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        // تنزيل الكود من الـ Git repo
         checkout scm
       }
     }
